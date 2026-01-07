@@ -13,28 +13,31 @@ jobs:
       contents: read
 
     steps:
+      # 1️⃣ Checkout the repo
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2️⃣ Set up Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      # Optional: test dependencies locally
+      # 3️⃣ Optional: install dependencies locally to catch errors
       - name: Install dependencies locally (optional)
         run: |
           python -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
 
-      # Prepare artifact: flatten app/ folder and include requirements.txt
+      # 4️⃣ Prepare artifact: flatten app/ and include requirements.txt
       - name: Prepare artifact
         run: |
           mkdir python-app
           cp -r app/* python-app/
           cp requirements.txt python-app/
 
+      # 5️⃣ Upload artifact for deployment
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
         with:
@@ -46,15 +49,18 @@ jobs:
     needs: build
     
     steps:
+      # 1️⃣ Download the artifact into a known folder
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
+          path: python-app/  # ✅ ensure exact folder name
 
-      - name: 'Deploy to Azure Web App'
+      # 2️⃣ Deploy to Azure Web App
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'fast-api-test'
           slot-name: 'staging'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_0EEDADA272F340049F1D75B4B96E00AF }}
-          package: python-app/
+          package: python-app/  # ✅ points to downloaded artifact folder
