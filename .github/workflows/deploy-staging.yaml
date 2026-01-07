@@ -27,13 +27,19 @@ jobs:
       - name: Archive application
         run: zip -r app.zip .
 
-      - name: Azure login
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: verify Azure Credentials
+        run: |
+          if [ -z "${{ secrets.AZURE_CREDENTIALS }}" ]; then
+          echo "Azure credentials are not set. Please set the AZURE_CREDENTIALS secret.";
+          exit 1;
+          else
+          echo "Azure credentials are set.";
+          fi
 
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+         creds: ${{ secrets.AZURE_CREDENTIALS }} 
       - name: Deploy to staging slot
         uses: azure/webapps-deploy@v2
         with:
